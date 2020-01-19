@@ -1,0 +1,166 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+
+    //public string Id { get; set; }
+    //        public string Name { get; set; }
+    //        public string Description { get; set; }
+    //        public double Price { get; set; }
+    //        public string Category { get; set; }
+
+}
+
+
+<table class="table">
+    <thead>
+        <tr>
+
+            <th scope="col">ID</th>
+            <th scope="col">Precio</th>
+            <th scope="col">Nombre</th>
+            <th scope="col">Descripcion</th>
+            <th scope="col">Prcategory</th>
+
+        </tr>
+    </thead>
+    <tbody data-bind="foreach: Ref">
+        <tr>
+
+            <td data-bind="text: id"></td>
+            <td data-bind="text:price"></td>
+            <td data-bind="text: name"></td>
+            <td data-bind="text:description"></td>
+            <td data-bind="text: category"></td>
+
+        </tr>
+    </tbody>
+    <tfoot>
+        <tr><th>
+                <input type="button" value="Refresh" class=" btn-sm btn-success btn-outline-light" data-bind="click:Refresh" />
+            </th></tr>
+    </tfoot>
+</table>
+
+
+<h1>Crear Producto</h1>
+<div class="row">
+    <div class="col-12">
+
+        <div class="form-group">
+            <label>Nombre </label>
+            <input class="form-control" type="text" data-bind="value:name" />
+        </div>
+
+    </div>
+    <div class="col-12">
+
+        <div class="form-group">
+            <label>Descripsion </label>
+            <textarea class="form-control" data-bind="value:description"></textarea>
+        </div>
+
+    </div>
+    <div class="col-12">
+
+        <div class="form-group">
+            <label>Precio </label>
+            <input type="number" class="form-control" data-bind="value:price">
+        </div>
+
+    </div>
+
+    <div class="col-12">
+
+        <div class="form-group">
+            <label>Category </label>
+            <select class="form-control" data-bind="options: categories, value:category"></select>
+        </div>
+
+    </div>
+    <div class="col-12">
+
+
+        <input type="button" value="save" class="float-right btn-lg btn-success btn-outline-light" data-bind="click:save" />
+
+    </div>
+</div>
+
+
+
+
+
+
+
+
+@section Scripts {
+
+    <script type="text/javascript">
+        (function () {
+
+            function MakeAjaxRequest(type, url, data, callbackFine) {
+                console.log(data);
+
+                $.ajax({
+                    type: type,
+                    url: url,
+                    data: JSON.stringify(data),
+                    contentType: 'application/json',
+                    dataType: "json",
+                    cache: false,
+                    error: function (response) {
+                        console.log(response);
+                    },
+                    success: function (response) {
+
+                        callbackFine(response);
+
+                    }
+                });
+            }
+            function MakeGetRequest(url, data, callbackFine) {
+
+                MakeAjaxRequest("GET", url, data, callbackFine);
+
+            }
+            function MakePostRequest(url, data, callbackFine) {
+
+                MakeAjaxRequest("POST", url, data, callbackFine);
+
+            }
+
+
+            let model = function () {
+                var self = this;
+                MakeGetRequest("/Home/Productos", null, (res) => { self.Products(res) });
+
+                this.Products = ko.observableArray([]);
+                this.id = ko.observable("");
+                this.name = ko.observable("");
+                this.description = ko.observable("");
+                this.price = ko.observable(0.0),
+                    this.category = ko.observable("");
+                this.Refresh = function () {
+                     MakeGetRequest("/Home/Productos", null, (res) => { self.Products(res) });
+                }
+                this.Ref = ko.computed(function () {
+
+                     setTimeout(function() {
+                            MakeGetRequest("/Home/Productos", null, (res) => { self.Products(res) });
+                     }, 10000);
+                    return self.Products();
+
+                   }, this);
+                this.categories = ko.observableArray(["Zapato", "Camisa", "Gorra"]);
+
+                this.save = function () {
+                    let postdata = ko.mapping.toJS(self, { 'ignore': ["categories", "Products"] });
+                    MakePostRequest("/Home/Crear", postdata);
+
+                }
+            }
+
+            ko.applyBindings(new model());
+        })();
+
+    </script>
+
+}
